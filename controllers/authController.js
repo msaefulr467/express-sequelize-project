@@ -1,17 +1,22 @@
-const { User } = require('../models');
-const generateToken = require('../config/generateToken');
-const { comparePassword, hashPassword } = require('../config/bcrypt');
-const { errorResponse, successResponse, internalErrorResponse, notFoundResponse } = require('../config/response');
-const { users } = require('../models');
-
+const { User } = require("../models");
+const generateToken = require("../config/generateToken");
+const { comparePassword, hashPassword } = require("../config/bcrypt");
+const {
+  errorResponse,
+  successResponse,
+  internalErrorResponse,
+  notFoundResponse,
+} = require("../config/response");
+const { users } = require("../models");
 
 async function register(req, res) {
   try {
     const { username, email, password } = req.body;
+
     // Check if user already exists
     const existingUser = await users.findOne({ where: { email } });
     if (existingUser) {
-      errorResponse(res, 'User already exists', 400);
+      errorResponse(res, "User already exists", 400);
     }
 
     // Hash the password
@@ -21,7 +26,7 @@ async function register(req, res) {
     const newUser = await users.create({
       username,
       email,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     const userResponse = {
@@ -29,14 +34,14 @@ async function register(req, res) {
       username: newUser.username,
       email: newUser.email,
       createdAt: newUser.createdAt,
-      updatedAt: newUser.updatedAt
+      updatedAt: newUser.updatedAt,
     };
 
-    successResponse(res, 'User registered successfully', userResponse, 201);
+    successResponse(res, "User registered successfully", userResponse, 201);
   } catch (error) {
     internalErrorResponse(res, error);
   }
-};
+}
 
 async function login(req, res) {
   try {
@@ -45,13 +50,13 @@ async function login(req, res) {
     // Check if user exists
     const user = await users.findOne({ where: { email } });
     if (!user) {
-      notFoundResponse(res, 'User not found');
+      notFoundResponse(res, "User not found");
     }
 
     // Validate password
     const validPassword = await comparePassword(password, user.password);
     if (!validPassword) {
-      errorResponse(res, 'Invalid password', 401);
+      errorResponse(res, "Invalid password", 401);
     }
 
     const userResponse = {
@@ -61,43 +66,48 @@ async function login(req, res) {
     };
 
     const token = generateToken(user);
-    successResponse(res, 'Logged in successfully', {
-      user: userResponse,
-      token
-    }, 200);
+    successResponse(
+      res,
+      "Logged in successfully",
+      {
+        user: userResponse,
+        token,
+      },
+      200
+    );
   } catch (error) {
-    console.error('Error logging in user:', error);
+    console.error("Error logging in user:", error);
     internalErrorResponse(res, error);
   }
-};
+}
 
 async function me(req, res) {
   try {
     const user = await users.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'email']
+      attributes: ["id", "username", "email"],
     });
     if (!user) {
-      errorResponse(res, 'User not found', 404);
+      errorResponse(res, "User not found", 404);
     }
-    successResponse(res, 'User fetched successfully', user, 200);
+    successResponse(res, "User fetched successfully", user, 200);
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error("Error fetching user:", error);
     internalErrorResponse(res, error);
   }
-};
+}
 
 async function logout(req, res) {
   try {
-    successResponse(res, 'Logged out successfully', null, 200);
+    successResponse(res, "Logged out successfully", null, 200);
   } catch (error) {
-    console.error('Error logging out user:', error);
+    console.error("Error logging out user:", error);
     internalErrorResponse(res, error);
   }
-};
+}
 
 module.exports = {
   register,
   login,
   me,
   logout,
-}
+};
